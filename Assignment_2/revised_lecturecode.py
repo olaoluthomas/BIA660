@@ -106,12 +106,12 @@ df = DataFrame(list_of_lists=data[1:], header=False)
 named = df['column1']
 named_multi = df[['column1', 'column7']]
 
-#fetch rows and (columns by name)
+# fetch rows and (columns by name)
 named_rows_and_columns = df[:5, 'column7']
 named_rows_and_multi_columns = df[:5, ['column4', 'column7']]
 
 
-#testing from_csv class method
+# testing from_csv class method
 df = DataFrame.from_csv('SalesJan2009.csv')
 rows = df.get_rows_where_column_has_value('Payment_Type', 'Visa')
 indices = df.get_rows_where_column_has_value('Payment_Type', 'Visa', index_only=True)

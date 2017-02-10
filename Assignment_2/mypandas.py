@@ -87,11 +87,12 @@ class DataFrame(object):
         else:
             return [row for row in self.data if row[column_name] == value]
 
-    # def min(self, column_name):
-        # if is instance(column_name, (int, float):
-            # return [min(row[column_name]) for row in self.data]
-        # else:
-            # return KeyError('Invalid data type...')
+    def min(self, column_name):
+        if isinstance(column_name, (int, float):
+            self.iterable = [row[item] for row in self.data]
+            return min(self.iterable)
+        else:
+            return KeyError('Invalid data type...')
 
     # def max(self, column_name):
         # if isinstance(column_name, (int, float):
@@ -107,7 +108,9 @@ class DataFrame(object):
 
 df = DataFrame.from_csv('SalesJan2009.csv')
 
-# mins = df.min('Price')
+sliced = df.data[]
+
+mins = df.min('Price')
 
 
 2+2
