@@ -2,8 +2,8 @@ import csv
 
 from collections import OrderedDict, Counter
 
-class DataFrame(object):
 
+class DataFrame(object):
     @classmethod
     def from_csv(cls, file_path, delimiting_character=',', quote_character='"'):
         with open(file_path, 'rU') as infile:
@@ -14,8 +14,6 @@ class DataFrame(object):
                 data.append(row)
 
             return cls(list_of_lists=data)
-
-
 
     def __init__(self, list_of_lists, header=True):
         # If headers already exist in the data, do this
@@ -40,7 +38,6 @@ class DataFrame(object):
         # Created an ordered dictionary from the data with headers as tags
         self.data = [OrderedDict(zip(self.header, row)) for row in self.data]
 
-
     def __getitem__(self, item):
         # this is for rows only
         if isinstance(item, (int, slice)):
@@ -61,7 +58,9 @@ class DataFrame(object):
 
                 if isinstance(item[1], list):
                     if all([isinstance(thing, int) for thing in item[1]]):
-                        return [[column_value for index, column_value in enumerate([value for value in row.itervalues()]) if index in item[1]] for row in rowz]
+                        return [
+                            [column_value for index, column_value in enumerate([value for value in row.itervalues()]) if
+                             index in item[1]] for row in rowz]
                     elif all([isinstance(thing, (str, unicode)) for thing in item[1]]):
                         return [[row[column_name] for column_name in item[1]] for row in rowz]
                     else:
@@ -91,40 +90,53 @@ class DataFrame(object):
         if isinstance(column_name, str):
             return [row[column_name] for row in self.data]
         else:
-            raise KeyError('You must pass a header of <type str> to retrieve data in columns')
-
+            raise KeyError('You must pass a header of <type str> to retrieve data with column names')
 
     def min(self, column_name):
         if isinstance(column_name, str):
-            self.iterable = [float(row[column_name].replace(',','')) for row in self.data]
-            return min(self.iterable)
+            try:
+                self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
+                if [isinstance(var, float) for var in self.iterable]:
+                    return min(self.iterable)
+            except:
+                raise KeyError('The data type in selected column is not numeric')
         else:
-            return KeyError('Invalid data type...')
+            raise KeyError('You must pass a header of <type str> to retrieve data with column names')
 
     def max(self, column_name):
         if isinstance(column_name, str):
-            self.iterable = [float(row[column_name].replace(',','')) for row in self.data]
-            return max(self.iterable)
+            self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
+            if [isinstance(var, float) for var in self.iterable]:
+                return max(self.iterable)
+            else:
+                raise KeyError('The data type in selected column is not numeric')
         else:
-            return KeyError('Invalid data type...')
+            raise KeyError('You must pass a header of <type str> to retrieve data with column names')
 
     def sum(self, column_name):
         if isinstance(column_name, str):
-            self.iterable = [float(row[column_name].replace(',','')) for row in self.data]
-            return sum(self.iterable)
+            self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
+            if [isinstance(var, float) for var in self.iterable]:
+                return sum(self.iterable)
+            else:
+                raise KeyError('The data type in selected column is not numeric')
         else:
-            return KeyError('Invalid data type...')
+            raise KeyError('You must pass a header of <type str> to retrieve data with column names')
 
     def median(self, column_name):
         self.iterable = None
         if isinstance(column_name, str):
-            self.iterable = [float(row[column_name].replace(',','')) for row in self.data]
+            self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
             self.iterable.sort()
-            if len(self.iterable) % 2:
-                return (self.iterable[len(self.iterable)/2 - 1] + self.iterable[len(self.iterable)/2])/2
+            if [isinstance(var, float) for var in self.iterable]:
+                if len(self.iterable) % 2:
+                    return (self.iterable[len(self.iterable) / 2 - 1] + self.iterable[len(self.iterable) / 2]) / 2
+                else:
+                    return self.iterable[len(self.iterable) / 2]
             else:
-                return self.iterable[len(self.iterable)/2]
-
+                raise KeyError('The data type in selected column is not numeric')
+        else:
+            return KeyError('You must pass a header of <type str> to retrieve data with column names')
 
 
 df = DataFrame.from_csv('SalesJan2009.csv')
@@ -134,6 +146,11 @@ maxs = df.max('Price')
 sums = df.sum('Price')
 medians = df.median('Price')
 
-# mina = df.min['Payment_Type'] to test that only successfully converted floats will be passed
+# to test get_col
+# get_col2 = df.get_column(2)
+
+# to test that only successfully converted floats will be passed
+mina = df.min['Payment_Type']
+
 # two plus two
-2+2
+2 + 2
