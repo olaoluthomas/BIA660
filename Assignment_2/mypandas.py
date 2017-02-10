@@ -87,30 +87,51 @@ class DataFrame(object):
         else:
             return [row for row in self.data if row[column_name] == value]
 
+    def get_column(self, column_name):
+        if isinstance(column_name, str):
+            return [row[column_name] for row in self.data]
+        else:
+            raise KeyError('You must pass a header of <type str> to retrieve data in columns')
+
+
     def min(self, column_name):
-        if isinstance(column_name, (int, float):
-            self.iterable = [row[item] for row in self.data]
+        if isinstance(column_name, str):
+            self.iterable = [float(row[column_name].replace(',','')) for row in self.data]
             return min(self.iterable)
         else:
             return KeyError('Invalid data type...')
 
-    # def max(self, column_name):
-        # if isinstance(column_name, (int, float):
-            # return []
+    def max(self, column_name):
+        if isinstance(column_name, str):
+            self.iterable = [float(row[column_name].replace(',','')) for row in self.data]
+            return max(self.iterable)
+        else:
+            return KeyError('Invalid data type...')
 
-    # def sum(self, column_name):
-        # return []
+    def sum(self, column_name):
+        if isinstance(column_name, str):
+            self.iterable = [float(row[column_name].replace(',','')) for row in self.data]
+            return sum(self.iterable)
+        else:
+            return KeyError('Invalid data type...')
 
-    # def median(self, column_name):
-        # return []
+    def median(self, column_name):
+        self.iterable = None
+        if isinstance(column_name, str):
+            self.iterable = [float(row[column_name].replace(',','')) for row in self.data]
+            self.iterable.sort()
+            if len(self.iterable) % 2:
+                return (self.iterable[len(self.iterable)/2 - 1] + self.iterable[len(self.iterable)/2])/2
+            else:
+                return self.iterable[len(self.iterable)/2]
 
 
 
 df = DataFrame.from_csv('SalesJan2009.csv')
-
-sliced = df.data[]
-
+get_col = df.get_column('Price')
 mins = df.min('Price')
-
+maxs = df.max('Price')
+sums = df.sum('Price')
+medians = df.median('Price')
 
 2+2
