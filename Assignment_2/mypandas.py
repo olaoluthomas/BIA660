@@ -134,4 +134,6 @@ maxs = df.max('Price')
 sums = df.sum('Price')
 medians = df.median('Price')
 
+# mina = df.min['Payment_Type'] to test that only successfully converted floats will be passed
+# two plus two
 2+2
