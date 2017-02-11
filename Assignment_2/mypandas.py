@@ -164,7 +164,7 @@ medians = df.median('Price')
 # get_col2 = df.get_column(2)
 
 # to test that only successfully converted floats will be passed
-mina = df.min['Payment_Type']
+#mina = df.min('Payment_Type')
 
 # two plus two
 2 + 2
