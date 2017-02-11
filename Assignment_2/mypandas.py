@@ -176,4 +176,4 @@ stddev = df.std('Price')
 
 # two plus two
 2+2
-# Something's not right
+# Something's not right... Something fishy is going on...
