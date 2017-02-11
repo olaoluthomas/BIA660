@@ -1,5 +1,6 @@
 import csv
 import numpy
+import dateutil
 from collections import OrderedDict, Counter
 
 
@@ -175,3 +176,4 @@ stddev = df.std('Price')
 
 # two plus two
 2+2
+# Something's not right
