@@ -90,18 +90,18 @@ class DataFrame(object):
         if isinstance(column_name, str):
             return [row[column_name] for row in self.data]
         else:
-            raise KeyError('You must pass a header of <type str> to retrieve data with column names')
+            raise TypeError('You must pass a header of <type str> to retrieve data with column names')
 
     def min(self, column_name):
         if isinstance(column_name, str):
             try:
                 self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
-                if [isinstance(var, float) for var in self.iterable]:
-                    return min(self.iterable)
             except:
-                raise KeyError('The data type in selected column is not numeric')
+                raise TypeError('The data type in selected column is not numeric')
+            if [isinstance(var, float) for var in self.iterable]:
+                return min(self.iterable)
         else:
-            raise KeyError('You must pass a header of <type str> to retrieve data with column names')
+            raise TypeError('You must pass a header of <type str> to retrieve data with column names')
 
     def max(self, column_name):
         if isinstance(column_name, str):
@@ -109,9 +109,9 @@ class DataFrame(object):
             if [isinstance(var, float) for var in self.iterable]:
                 return max(self.iterable)
             else:
-                raise KeyError('The data type in selected column is not numeric')
+                raise TypeError('The data type in selected column is not numeric')
         else:
-            raise KeyError('You must pass a header of <type str> to retrieve data with column names')
+            raise TypeError('You must pass a header of <type str> to retrieve data with column names')
 
     def sum(self, column_name):
         if isinstance(column_name, str):
@@ -119,9 +119,19 @@ class DataFrame(object):
             if [isinstance(var, float) for var in self.iterable]:
                 return sum(self.iterable)
             else:
-                raise KeyError('The data type in selected column is not numeric')
+                raise TypeError('The data type in selected column is not numeric')
         else:
-            raise KeyError('You must pass a header of <type str> to retrieve data with column names')
+            raise TypeError('You must pass a header of <type str> to retrieve data with column names')
+
+    def mean(self, column_name):
+        if isinstance(column_name, str):
+            self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
+            if [isinstance(var, float) for var in self.iterable]:
+                return sum(self.iterable)/len(self.iterable)
+            else:
+                raise TypeError('The data type in selected column is not numeric')
+        else:
+            raise TypeError('You must pass a header of <type str> to retrieve data with column names')
 
     def median(self, column_name):
         self.iterable = None
@@ -134,9 +144,12 @@ class DataFrame(object):
                 else:
                     return self.iterable[len(self.iterable) / 2]
             else:
-                raise KeyError('The data type in selected column is not numeric')
+                raise TypeError('The data type in selected column is not numeric')
         else:
-            return KeyError('You must pass a header of <type str> to retrieve data with column names')
+            return TypeError('You must pass a header of <type str> to retrieve data with column names')
+
+    def std(self, colum_name):
+        pass
 
 
 df = DataFrame.from_csv('SalesJan2009.csv')
@@ -144,6 +157,7 @@ get_col = df.get_column('Price')
 mins = df.min('Price')
 maxs = df.max('Price')
 sums = df.sum('Price')
+means = df.mean('Price')
 medians = df.median('Price')
 
 # to test get_col
