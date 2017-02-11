@@ -1,5 +1,5 @@
 import csv
-
+import numpy
 from collections import OrderedDict, Counter
 
 
@@ -20,10 +20,12 @@ class DataFrame(object):
         if header:
             self.header = list_of_lists[0]
             self.data = list_of_lists[1:]
+            # iterable will be used later to collect data in columns in a list
+            self.iterable = None
 
             # If any headers are duplicated, raise TypeError
             if len(Counter(self.header).items()) < len(self.header):
-                raise TypeError('You have duplicate headers in your data')
+                raise Exception('You have duplicate headers in your data')
 
         # If there are no headers in the data, create custom headers
         else:
@@ -96,75 +98,80 @@ class DataFrame(object):
         if isinstance(column_name, str):
             try:
                 self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
+                return min(self.iterable)
             except:
                 raise TypeError('The data type in selected column is not numeric')
-            if [isinstance(var, float) for var in self.iterable]:
-                return min(self.iterable)
         else:
             raise TypeError('You must pass a header of <type str> to retrieve data with column names')
 
     def max(self, column_name):
         if isinstance(column_name, str):
-            self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
-            if [isinstance(var, float) for var in self.iterable]:
+            try:
+                self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
                 return max(self.iterable)
-            else:
+            except:
                 raise TypeError('The data type in selected column is not numeric')
         else:
             raise TypeError('You must pass a header of <type str> to retrieve data with column names')
 
     def sum(self, column_name):
         if isinstance(column_name, str):
-            self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
-            if [isinstance(var, float) for var in self.iterable]:
+            try:
+                self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
                 return sum(self.iterable)
-            else:
+            except:
                 raise TypeError('The data type in selected column is not numeric')
         else:
             raise TypeError('You must pass a header of <type str> to retrieve data with column names')
 
     def mean(self, column_name):
         if isinstance(column_name, str):
-            self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
-            if [isinstance(var, float) for var in self.iterable]:
-                return sum(self.iterable)/len(self.iterable)
-            else:
+            try:
+                self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
+                return numpy.average(self.iterable)
+            except:
                 raise TypeError('The data type in selected column is not numeric')
         else:
             raise TypeError('You must pass a header of <type str> to retrieve data with column names')
 
     def median(self, column_name):
-        self.iterable = None
         if isinstance(column_name, str):
-            self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
-            self.iterable.sort()
-            if [isinstance(var, float) for var in self.iterable]:
-                if len(self.iterable) % 2:
-                    return (self.iterable[len(self.iterable) / 2 - 1] + self.iterable[len(self.iterable) / 2]) / 2
-                else:
-                    return self.iterable[len(self.iterable) / 2]
-            else:
+            try:
+                self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
+                return numpy.median(self.iterable)
+            except:
                 raise TypeError('The data type in selected column is not numeric')
         else:
             return TypeError('You must pass a header of <type str> to retrieve data with column names')
 
-    def std(self, colum_name):
-        pass
+    def std(self, column_name):
+        if isinstance(column_name, str):
+            try:
+                self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
+                return numpy.std(self.iterable)
+            except:
+                raise TypeError('The data type in selected column is not numeric')
+        else:
+            return TypeError('You must pass a header of <type str> to retrieve data with column names')
 
 
 df = DataFrame.from_csv('SalesJan2009.csv')
 get_col = df.get_column('Price')
-mins = df.min('Price')
-maxs = df.max('Price')
+mns = df.min('Price')
+mxs = df.max('Price')
 sums = df.sum('Price')
 means = df.mean('Price')
 medians = df.median('Price')
+stddev = df.std('Price')
 
 # to test get_col
 # get_col2 = df.get_column(2)
 
 # to test that only successfully converted floats will be passed
-#mina = df.min('Payment_Type')
+# mina = df.min('Payment_Type')
+
+# testing std instance method
+# stddev_2 = df.std('Payment_Type')
 
 # two plus two
-2 + 2
+2+2
