@@ -1,7 +1,8 @@
 import csv
 import numpy
-import dateutil
+
 from collections import OrderedDict, Counter
+from dateutil.parser import parse
 
 
 class DataFrame(object):
@@ -21,7 +22,6 @@ class DataFrame(object):
         if header:
             self.header = list_of_lists[0]
             self.data = list_of_lists[1:]
-            # iterable will be used later to collect data in columns in a list
             self.iterable = None
 
             # If any headers are duplicated, raise TypeError
@@ -96,9 +96,19 @@ class DataFrame(object):
             raise TypeError('You must pass a header of <type str> to retrieve data with column names')
 
     def min(self, column_name):
+        def isfloat(x):
+            if type(float(x)) == float:
+                return True
+            else:
+                return False
+
         if isinstance(column_name, str):
             try:
-                self.iterable = [float(row[column_name].replace(',', '')) for row in self.data]
+                self.iterable = [row[column_name].replace(',', '') for row in self.data]
+                if [isfloat(self.iterable[string])is True for string in self.iterable]:
+                    self.iterable = [float(string) for string in self.iterable]
+                else:
+                    self.iterable = [parse(string) for string in self.iterable]
                 return min(self.iterable)
             except:
                 raise TypeError('The data type in selected column is not numeric')
@@ -157,8 +167,9 @@ class DataFrame(object):
 
 
 df = DataFrame.from_csv('SalesJan2009.csv')
-get_col = df.get_column('Price')
+get_col = df.get_column('Payment_Type')
 mns = df.min('Price')
+# mina = df.min('Transaction_date')
 mxs = df.max('Price')
 sums = df.sum('Price')
 means = df.mean('Price')
@@ -175,4 +186,4 @@ stddev = df.std('Price')
 # stddev_2 = df.std('Payment_Type')
 
 # two plus two
-2+2
+2 + 2
