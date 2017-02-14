@@ -23,7 +23,6 @@ class DataFrame(object):
             self.data = list_of_lists[1:]
             self.iterable = None
             self.row_of_rows = None
-            self.sorted_data = None
 
             # If any headers are duplicated, raise an exception
             if len(Counter(self.header).items()) < len(self.header):
@@ -138,10 +137,6 @@ class DataFrame(object):
         else:
             raise Exception("Your data doesn't match!!!")
 
-    # sorted(test, key=lambda x: x[1], reverse=True)
-    def sort_by(self, column_name, reverse=False):
-        self.sorted_data = sorted(self., key=)
-
 def convertDataType(string):
     string_no_comma = string.replace(',', '')
     if isfloat(string_no_comma):
@@ -162,6 +157,7 @@ def stringToDatetime(string):
     except:
         raise Exception('Invalid data type should be a float or timestamp string')
 
+# sorted(test, key=lambda x: x[1], reverse=True)
 
 df = DataFrame.from_csv('SalesJan2009.csv')
 get_col = df.get_column('Payment_Type')
