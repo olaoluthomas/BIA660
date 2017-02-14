@@ -90,8 +90,17 @@ class DataFrame(object):
     # def min(self, column_name):
         # if is instance(column_name, (int, float):
             # return [min(row[column_name]) for row in self.data]
+        # else:
+            # return KeyError('Invalid data type...')
 
     # def max(self, column_name):
+        # if isinstance(column_name, (int, float):
+            # return []
+
+    # def sum(self, column_name):
+        # return []
+
+    # def median(self, column_name):
         # return []
 
 

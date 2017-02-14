@@ -139,8 +139,15 @@ class DataFrame(object):
             raise Exception("Your data doesn't match!!!")
 
     # sorted(test, key=lambda x: x[1], reverse=True)
-    def sort_by(self, column_name, reverse=False):
-        self.sorted_data = sorted(self., key=)
+    def sort_by(self, column_name, Bool):
+        if Bool == False:
+            self.sorted_data = sorted(self.data, key=lambda row: convertDataType(row[column_name]))
+            return self.sorted_data
+        elif Bool == True:
+            self.sorted_data = sorted(self.data, key=lambda row: convertDataType(row[column_name]), reverse=True)
+            return self.sorted_data
+        else:
+            raise Exception("You must pass either True or False as an arg to Column name")
 
 def convertDataType(string):
     string_no_comma = string.replace(',', '')
@@ -164,17 +171,19 @@ def stringToDatetime(string):
 
 
 df = DataFrame.from_csv('SalesJan2009.csv')
-get_col = df.get_column('Payment_Type')
-mns = df.min('Price')
-mina = df.min('Transaction_date')
+# get_col = df.get_column('Payment_Type')
+# mns = df.min('Price')
+# mina = df.min('Transaction_date')
 # minBad = df.min('Payment_Type')
-mxs = df.max('Price')
-sums = df.sum('Price')
-means = df.mean('Price')
+# mxs = df.max('Price')
+# sums = df.sum('Price')
+# means = df.mean('Price')
 # medians = df.median('Payment_Type')
 stddev = df.std('Price')
 
-adding = df.add_rows([[value for value in df[1].itervalues()]])
+# adding = df.add_rows([[value for value in df[1].itervalues()]])
+sorts = df.sort_by('Account_Created', True)
+
 # to test get_col
 # get_col2 = df.get_column(2)
 
