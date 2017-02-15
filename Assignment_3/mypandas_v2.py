@@ -3,6 +3,8 @@ import csv
 from collections import OrderedDict, Counter
 from dateutil.parser import parse
 
+from operator import itemgetter
+
 
 class DataFrame(object):
     @classmethod
@@ -139,7 +141,7 @@ class DataFrame(object):
             raise Exception("Your data doesn't match!!!")
 
     # sorted(test, key=lambda x: x[1], reverse=True)
-    def sort_by(self, column_name, Bool):
+    def sort_by(self, column_name, Bool=None):
         if Bool == False:
             self.sorted_data = sorted(self.data, key=lambda row: convertDataType(row[column_name]))
             return self.sorted_data
