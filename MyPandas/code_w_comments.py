@@ -160,7 +160,7 @@ class DataFrame(object):
         if index_only:
             return [index for index, row_value in enumerate(self[column_name]) if row_value==value]
         else:
-            return [row for row in self.data if row[column_name]==value]
+            return [row for row in self.data if row[column_name] == value]
 
 class Series(list):
     def __init__(self, list_of_values):
@@ -184,33 +184,33 @@ things = lines[559].split('"')
 data[559] = things[0].split(',')[:-1] + [things[1]] + things[-1].split(',')[1:]
 
 
-df = DataFrame(list_of_lists=data)
+# df = DataFrame(list_of_lists=data)
 # get the 5th row
-fifth = df[4]
-sliced = df[4:10]
+# fifth = df[4]
+# sliced = df[4:10]
 
 # get item definition for df [row, column]
 
 # get the third column
-tupled = df[:, 2]
-tupled_slices = df[0:5, :3]
+# tupled = df[:, 2]
+# tupled_slices = df[0:5, :3]
 
-tupled_bits = df[[1, 4], [1, 4]]
+# tupled_bits = df[[1, 4], [1, 4]]
 
 
 # adding header for data with no header
-df = DataFrame(list_of_lists=data[1:], header=False)
+# df = DataFrame(list_of_lists=data[1:], header=False)
 
 # fetch columns by name
-named = df['column1']
-named_multi = df[['column1', 'column7']]
+# named = df['column1']
+# named_multi = df[['column1', 'column7']]
 
-#fetch rows and (columns by name)
-named_rows_and_columns = df[:5, 'column7']
-named_rows_and_multi_columns = df[:5, ['column4', 'column7']]
+# fetch rows and (columns by name)
+# named_rows_and_columns = df[:5, 'column7']
+# named_rows_and_multi_columns = df[:5, ['column4', 'column7']]
 
 
-#testing from_csv class method
+# testing from_csv class method
 df = DataFrame.from_csv('SalesJan2009.csv')
 rows = df.get_rows_where_column_has_value('Payment_Type', 'Visa')
 indices = df.get_rows_where_column_has_value('Payment_Type', 'Visa', index_only=True)

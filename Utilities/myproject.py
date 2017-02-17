@@ -1,12 +1,39 @@
-from flask import Flask
+import os
+import json
+import requests
+from flask import Flask, request, Response
+from textblob import TextBlob
+
+
 application = Flask(__name__)
 
-@application.route("/")
-def hello():
-    return """<h1 style='color:blue'>Hello there, Simeon! The setup script seems to have run successfully for you! Yay!</h1>
-				<br>
-				<p>You have a flask webserver running on your EC2 instance. This is where you're going to develop the APIs for your chatbot and do some other fun stuff.</p>
-				<a href="https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-uwsgi-and-nginx-on-ubuntu-16-04">Here's the link to the instructions if you'd like to do yourself in the future.</a>"""
+# SLACK_WEBHOOK_SECRET = os.environ.get('SLACK_WEBHOOK_SECRET')
+
+slack_inbound_url = 'https://hooks.slack.com/services/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'
+
+@application.route('/slack', methods=['POST'])
+def inbound():
+    response = {'username': 'zac_bot', 'icon_emoji': ':robot_face:'}
+    #if request.form.get('token') == SLACK_WEBHOOK_SECRET:
+    channel = request.form.get('channel_name')
+    username = request.form.get('user_name')
+    text = request.form.get('text')
+    inbound_message = username + " in " + channel + " says: " + text
+    if username in ['zac.wentzell']:
+        response['text'] = 'Hey dude!'
+
+        r = requests.post(slack_inbound_url, json=response)
+
+    print inbound_message
+    print request.form
+
+    return Response(), 200
+
+
+@application.route('/', methods=['GET'])
+def test():
+    return Response('It works!')
+
 
 if __name__ == "__main__":
     application.run(host='0.0.0.0', port=41953)

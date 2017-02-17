@@ -1,9 +1,10 @@
 import csv
 
-from collections import OrderedDict, Counter
+from collections import OrderedDict, Counter, defaultdict
 from dateutil.parser import parse
 
-from operator import itemgetter
+
+# from operator import itemgetter
 
 
 class DataFrame(object):
@@ -51,7 +52,7 @@ class DataFrame(object):
 
         # this is for columns only
         elif isinstance(item, (str, unicode)):
-            return [row[item] for row in self.data]
+            return Series([tryConvertDataType(row[item]) for row in self.data])
 
         # this is for rows and columns
         elif isinstance(item, tuple):
@@ -84,7 +85,14 @@ class DataFrame(object):
 
         # only for lists of column names
         elif isinstance(item, list):
-            return [[row[column_name] for column_name in item] for row in self.data]
+            if all(isinstance(thing, bool) for thing in item):
+                comp_list = []
+                for index, row in enumerate(self.data):
+                    if item[index]:
+                        comp_list.append(row)
+                return comp_list
+            else:
+                return [[row[column_name] for column_name in item] for row in self.data]
 
     def get_rows_where_column_has_value(self, column_name, value, index_only=False):
         if index_only:
@@ -100,23 +108,23 @@ class DataFrame(object):
 
     def min(self, column_name):
         self.iterable = [row[column_name].replace(',', '') for row in self.data]
-        return min([float(string) if isfloat(string) else stringToDatetime(string) for string in self.iterable])
+        return min([convertDataType(string) for string in self.iterable])
 
     def max(self, column_name):
         self.iterable = [row[column_name].replace(',', '') for row in self.data]
-        return max([float(string) if isfloat(string) else stringToDatetime(string) for string in self.iterable])
+        return max([convertDataType(string) for string in self.iterable])
 
     def sum(self, column_name):
         self.iterable = [row[column_name].replace(',', '') for row in self.data]
-        return sum([float(string) if isfloat(string) else stringToDatetime(string) for string in self.iterable])
+        return sum([convertDataType(string) for string in self.iterable])
 
     def mean(self, column_name):
-        return self.sum(column_name)/len(self[column_name])
+        return self.sum(column_name) / len(self[column_name])
 
     def median(self, column_name):
         self.iterable = sorted([row[column_name].replace(',', '') for row in self.data])
-        self.iterable = [float(string) if isfloat(string) else stringToDatetime(string) for string in self.iterable]
-        midd = len(self.iterable)/2
+        self.iterable = [convertDataType(string) for string in self.iterable]
+        midd = len(self.iterable) / 2
         if len(self.iterable) % 2 == 0:
             return (self.iterable[midd - 1] + self.iterable[midd]) / 2
         else:
@@ -124,7 +132,8 @@ class DataFrame(object):
 
     def std(self, column_name):
         mean = self.mean(column_name)
-        return (sum([(convertDataType(item) - mean)**2 for item in self[column_name]])/len(self[column_name]))**0.5
+        return (
+               sum([(convertDataType(item) - mean) ** 2 for item in self[column_name]]) / len(self[column_name])) ** 0.5
 
     def add_rows(self, row_of_rows):
         if all([len(row) == len(self.header) for row in row_of_rows]):
@@ -140,23 +149,108 @@ class DataFrame(object):
         else:
             raise Exception("Your data doesn't match!!!")
 
-    # sorted(test, key=lambda x: x[1], reverse=True)
-    def sort_by(self, column_name, Bool=None):
-        if Bool == False:
-            self.sorted_data = sorted(self.data, key=lambda row: convertDataType(row[column_name]))
+    # the syntax is sorted(test, key=lambda x: x[1], reverse=True)
+    # sorts the entire dataframe by the column name passed either in ascending or descending order
+    def sort_by(self, column_name, desc=False):
+        if isinstance(column_name, str):
+            self.sorted_data = sorted(self.data, key=lambda row: row[column_name], reverse=desc)
             return self.sorted_data
-        elif Bool == True:
-            self.sorted_data = sorted(self.data, key=lambda row: convertDataType(row[column_name]), reverse=True)
-            return self.sorted_data
+        elif isinstance(column_name, list) & isinstance(desc, list):
+            for index, value in enumerate(column_name):
+                self.sorted_data = sorted(self.data, key=lambda row: row[value], reverse=desc[index])
+                return self.sorted_data
         else:
-            raise Exception("You must pass either True or False as an arg to Column name")
+            raise Exception("You've got your syntax all wrong!")
+
+    def group_by(self, column_name, agg_column, fxn):
+        if isinstance(column_name, str) & isinstance(agg_column, str):
+            dd = defaultdict(list)
+            for index, row in enumerate(self.data):
+                for item in self[column_name]:
+                    dd[item].append([val for val in self[agg_column]])
+            return item, fxn(dd[item])
+        else:
+            raise Exception('Something\'s missing...')
+
+def avg(list):
+    return sum(list)/len(list)
+
+def max(list):
+    return max(list)
+
+def min(list):
+    return min(list)
+
+class Series(list):
+    def __eq__(self, other):
+        ret_list = []
+
+        for item in self:
+            ret_list.append(item == other)
+
+        return ret_list
+
+    def __ne__(self, other):
+        ret_list = []
+
+        for item in self:
+            ret_list.append(item != other)
+
+        return ret_list
+
+    def __gt__(self, other):
+        ret_list = []
+
+        for item in self:
+            ret_list.append(item > other)
+
+        return ret_list
+
+    def __lt__(self, other):
+        ret_list = []
+
+        for item in self:
+            ret_list.append(item < other)
+
+        return ret_list
+
+    def __ge__(self, other):
+        ret_list = []
+
+        for item in self:
+            ret_list.append(item >= other)
+
+        return ret_list
+
+    def __le__(self, other):
+        ret_list = []
+
+        for item in self:
+            ret_list.append(item <= other)
+
+        return ret_list
+
 
 def convertDataType(string):
     string_no_comma = string.replace(',', '')
     if isfloat(string_no_comma):
         return float(string_no_comma)
     else:
-        return stringToDatetime(string)
+        try:
+            return parse(string_no_comma)
+        except:
+            raise Exception('Invalid data type. Must be a float or timestamp string')
+
+
+def tryConvertDataType(string):
+    if isfloat(string):
+        return float(string)
+    else:
+        try:
+            return parse(string)
+        except:
+            return string
+
 
 def isfloat(x):
     try:
@@ -164,12 +258,6 @@ def isfloat(x):
         return True
     except:
         return False
-
-def stringToDatetime(string):
-    try:
-        return parse(string)
-    except:
-        raise Exception('Invalid data type should be a float or timestamp string')
 
 
 df = DataFrame.from_csv('SalesJan2009.csv')
@@ -181,14 +269,15 @@ df = DataFrame.from_csv('SalesJan2009.csv')
 # sums = df.sum('Price')
 # means = df.mean('Price')
 # medians = df.median('Payment_Type')
-stddev = df.std('Price')
+# stddev = df.std('Price')
 
 # adding = df.add_rows([[value for value in df[1].itervalues()]])
-sorts = df.sort_by('Account_Created', True)
-
+sort = df.sort_by('Transaction_date')
+sorts = df.sort_by(['City', 'Transaction_date'], [False, True])
+comp = df[df['Payment_Type'] == 'Mastercard']
+grp = df.group_by('Payment_Type', 'Price', avg)
 # to test get_col
 # get_col2 = df.get_column(2)
-
 # to test that only successfully converted floats will be passed
 # mina = df.min('Payment_Type')
 
