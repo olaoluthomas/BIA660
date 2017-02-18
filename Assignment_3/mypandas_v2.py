@@ -162,23 +162,23 @@ class DataFrame(object):
         else:
             raise Exception("You've got your syntax all wrong!")
 
-    def group_by(self, column_name, agg_column, fxn):
+    # for
+    def group_by(self, column_name, agg_column):
         if isinstance(column_name, str) & isinstance(agg_column, str):
             dd = defaultdict(list)
-            for index, row in enumerate(self.data):
-                for item in self[column_name]:
-                    dd[item].append([val for val in self[agg_column]])
-            return item, fxn(dd[item])
+            for index, value in enumerate(self[column_name]):
+                dd[value].append(self[agg_column][index])
+            return dd
         else:
             raise Exception('Something\'s missing...')
 
 def avg(list):
     return sum(list)/len(list)
 
-def max(list):
+def max(x):
     return max(list)
 
-def min(list):
+def min(x):
     return min(list)
 
 class Series(list):
@@ -270,12 +270,12 @@ df = DataFrame.from_csv('SalesJan2009.csv')
 # means = df.mean('Price')
 # medians = df.median('Payment_Type')
 # stddev = df.std('Price')
-
 # adding = df.add_rows([[value for value in df[1].itervalues()]])
-sort = df.sort_by('Transaction_date')
-sorts = df.sort_by(['City', 'Transaction_date'], [False, True])
-comp = df[df['Payment_Type'] == 'Mastercard']
-grp = df.group_by('Payment_Type', 'Price', avg)
+
+# sort = df.sort_by('Transaction_date')
+# sorts = df.sort_by(['City', 'Transaction_date'], [False, True])
+# comp = df[df['Payment_Type'] == 'Mastercard']
+grp = df.group_by('Payment_Type', 'Price')
 # to test get_col
 # get_col2 = df.get_column(2)
 # to test that only successfully converted floats will be passed
