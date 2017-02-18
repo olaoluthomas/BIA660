@@ -163,12 +163,12 @@ class DataFrame(object):
             raise Exception("You've got your syntax all wrong!")
 
     # for
-    def group_by(self, column_name, agg_column):
+    def group_by(self, column_name, agg_column, fxn):
         if isinstance(column_name, str) & isinstance(agg_column, str):
             dd = defaultdict(list)
             for index, value in enumerate(self[column_name]):
                 dd[value].append(self[agg_column][index])
-            return dd
+            return [(dd.keys()[i], fxn(dd.values()[i])) for i in range(0, len(dd))]
         else:
             raise Exception('Something\'s missing...')
 
@@ -243,11 +243,18 @@ def convertDataType(string):
 
 
 def tryConvertDataType(string):
-    if isfloat(string):
-        return float(string)
-    else:
+    try:
+        string_no_comma = string.replace(',', '')
+        if isfloat(string_no_comma):
+            return float(string_no_comma)
+        else:
+            return parse(string_no_comma)
+    except:
         try:
-            return parse(string)
+            if isfloat(string):
+                return float(string)
+            else:
+                return parse(string)
         except:
             return string
 
@@ -275,7 +282,7 @@ df = DataFrame.from_csv('SalesJan2009.csv')
 # sort = df.sort_by('Transaction_date')
 # sorts = df.sort_by(['City', 'Transaction_date'], [False, True])
 # comp = df[df['Payment_Type'] == 'Mastercard']
-grp = df.group_by('Payment_Type', 'Price')
+grp = df.group_by('Payment_Type', 'Price', avg)
 # to test get_col
 # get_col2 = df.get_column(2)
 # to test that only successfully converted floats will be passed
