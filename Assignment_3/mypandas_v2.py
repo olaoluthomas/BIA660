@@ -283,6 +283,7 @@ df = DataFrame.from_csv('SalesJan2009.csv')
 # sorts = df.sort_by(['City', 'Transaction_date'], [False, True])
 # comp = df[df['Payment_Type'] == 'Mastercard']
 grp = df.group_by('Payment_Type', 'Price', avg)
+prd = df.group_by('Product', 'Price', avg)
 # to test get_col
 # get_col2 = df.get_column(2)
 # to test that only successfully converted floats will be passed
