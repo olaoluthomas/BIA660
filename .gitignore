@@ -2,5 +2,6 @@
 Dr_Lappas_Class/
 Video_Lectures/
 AWS_Key/
-.ipnyb_checkpoints/
-.idea/
+*.ipnyb_checkpoints/
+*.idea/
+*.ipynb
