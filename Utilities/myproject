@@ -1,6 +1,6 @@
 server {
     listen 41953;
-    server_name 52.11.123.98;
+    server_name 184.72.130.176;
 
     location / {
         include uwsgi_params;
