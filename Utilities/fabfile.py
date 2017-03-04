@@ -1,6 +1,6 @@
 from fabric.api import *
 
-env.hosts=["ec2-184-72-130-176.compute-1.amazonaws.com"]
+env.hosts=["ec2-54-164-55-148.compute-1.amazonaws.com"]
 env.user="ubuntu"
 env.key_filename=['C:\\Users\Laolu\Dropbox\GitHub\BIA660\AWS_Key\ec2Inst2Key.pem']
 YOUR_NAME_HERE='Simeon'
