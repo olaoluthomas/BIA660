@@ -9,9 +9,9 @@ my_bot_name = 'slickbot' #e.g. zac_bot
 my_slack_username = 'simeonthomas'#e.g. zac.wentzell
 
 # main URL
-slack_inbound_url = 'https://hooks.slack.com/services/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'
+slack_inbound_url = 'https://hooks.slack.com/services/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'
 # test inbound URL
-#slack_inbound_url = 'https://hooks.slack.com/services/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'
+# slack_inbound_url = 'https://hooks.slack.com/services/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'
 
 
 # this handles POST requests sent to your server at SERVERIP:41953/slack
@@ -98,11 +98,11 @@ def inbound():
             print 'Bot is responding to Task 4'
             string = text.split(":")
             location = string[1].strip()
-            w_url = ''
-            if str(location):
-                w_url = 'http://api.openweathermap.org/data/2.5/weather?q='+location+'&APPID=a295d9b1395bfe5bc776408b9cb2e3f8'
-            elif int(location):
-                w_url = 'http://api.openweathermap.org/data/2.5/weather?zip='+location+',us&APPID=a295d9b1395bfe5bc776408b9cb2e3f8'
+            w_url = ""
+            if int(location):
+                w_url = 'http://api.openweathermap.org/data/2.5/weather?zip=' + location + ',us&APPID=a295d9b1395bfe5bc776408b9cb2e3f8'
+            else:
+                w_url = 'http://api.openweathermap.org/data/2.5/weather?q=' + location + '&APPID=a295d9b1395bfe5bc776408b9cb2e3f8'
 
             data = requests.get(w_url)
             w_son = json.loads(data.text)
@@ -114,7 +114,8 @@ def inbound():
                 high = str(w_son['main']['temp_max'] - 273.15)+" C"
                 low = str(w_son['main']['temp_min'] - 273.15)+" C"
                 wind = str(w_son['wind']['speed'])+" mph"
-                response['text'] = "It's "+tmp+" in "+nam+", "+con+" with "+wth+".\nThe expected extremes for today are "+high+" and "+low+".\n\nWinds of "+wind+"\n(Waited for {}s before responding)".format(delay)
+
+                response['text'] = "It's "+tmp+" in "+nam+", "+con+" with "+wth+".\nThe expected extremes for today are "+high+" and "+low+".\nWinds of "+wind+"\n\n(Waited for {}s before responding)".format(delay)
             else:
                 response['text'] = "Cannot interpret.\nPlease provide an actionable location\n\n(Waited for {}s before responding)".format(delay)
             r = requests.post(slack_inbound_url, json=response)
