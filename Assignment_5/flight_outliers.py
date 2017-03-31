@@ -31,21 +31,23 @@ def scrape_data(start_date, from_place, to_place, city_name):
     action2.send_keys(to_place)
     action2.send_keys(Keys.ENTER)
     action2.perform()
-    time.sleep(5)
+    time.sleep(2)
 
     results = driver.find_elements_by_class_name('LJTSM3-v-d')
     for i in range(0, len(results), 1):
         if city_name in str(unidecode(results[i].text)):
             target = results[i]
 
-    time.sleep(10)
-    bars = target.find_elements_by_class_name('LJTSM3-w-x')
-    data = []
-    for bar in bars:
-        ActionChains(driver).move_to_element(bar).perform()
-        time.sleep(0.001)
-        data.append((target.find_element_by_class_name('LJTSM3-w-k').find_elements_by_tag_name('div')[0].text,
-                     target.find_element_by_class_name('LJTSM3-w-k').find_elements_by_tag_name('div')[1].text))
+    if target:
+        bars = target.find_elements_by_class_name('LJTSM3-w-x')
+        data = []
+        for bar in bars:
+            ActionChains(driver).move_to_element(bar).perform()
+            time.sleep(0.001)
+            data.append((target.find_element_by_class_name('LJTSM3-w-k').find_elements_by_tag_name('div')[0].text,
+                        target.find_element_by_class_name('LJTSM3-w-k').find_elements_by_tag_name('div')[1].text))
+    else:
+        raise Exception("No relevant results found. Sorry...")
 
     clean_data = []
     for d in data:
@@ -77,7 +79,7 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
     action2.send_keys(to_place)
     action2.send_keys(Keys.ENTER)
     action2.perform()
-    time.sleep(5)
+    time.sleep(2)
 
     results = driver.find_elements_by_class_name('LJTSM3-v-d')
     for i in range(0, len(results), 1):
@@ -85,14 +87,17 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
             target = results[i]
             index_to_stretch = i + 1
 
-    time.sleep(5)
-    bars = target.find_elements_by_class_name('LJTSM3-w-x')
-    data1 = []
-    for bar in bars:
-        ActionChains(driver).move_to_element(bar).perform()
-        time.sleep(0.001)
-        data1.append((target.find_element_by_class_name('LJTSM3-w-k').find_elements_by_tag_name('div')[0].text,
-                     target.find_element_by_class_name('LJTSM3-w-k').find_elements_by_tag_name('div')[1].text))
+    time.sleep(2)
+    if target:
+        bars = target.find_elements_by_class_name('LJTSM3-w-x')
+        data1 = []
+        for bar in bars:
+            ActionChains(driver).move_to_element(bar).perform()
+            time.sleep(0.001)
+            data1.append((target.find_element_by_class_name('LJTSM3-w-k').find_elements_by_tag_name('div')[0].text,
+                        target.find_element_by_class_name('LJTSM3-w-k').find_elements_by_tag_name('div')[1].text))
+    else:
+        raise Exception("No relevant results found. Sorry...")
 
     ActionChains(driver).move_to_element(bars[0]).perform()
     time.sleep(0.5)
@@ -100,7 +105,7 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
                                                + ']/div/div[2]/div[2]/div/div[2]/div[5]/div')
     stretch_bar.click()
 
-    time.sleep(5)
+    time.sleep(2)
     results = driver.find_elements_by_class_name('LJTSM3-v-d')
     for i in range(0, len(results), 1):
         if city_name in str(unidecode(results[i].text)):
