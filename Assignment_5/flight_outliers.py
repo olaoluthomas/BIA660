@@ -87,7 +87,6 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
             target = results[i]
             index_to_stretch = i + 1
 
-    time.sleep(2)
     if target:
         bars = target.find_elements_by_class_name('LJTSM3-w-x')
         data1 = []
