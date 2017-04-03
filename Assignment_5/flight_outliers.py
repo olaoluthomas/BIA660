@@ -6,11 +6,11 @@ from unidecode import unidecode
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
-import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+from scipy.spatial.distance import euclidean
 
 
 def scrape_data(start_date, from_place, to_place, city_name):
@@ -24,7 +24,6 @@ def scrape_data(start_date, from_place, to_place, city_name):
     action1.send_keys(Keys.ENTER)
     action1.perform()
     time.sleep(0.05)
-
     to_input = driver.find_element_by_xpath('//*[@id="root"]/div[3]/div[3]/div/div[4]/div/div')
     to_input.click()
     action2 = ActionChains(driver)
@@ -32,12 +31,10 @@ def scrape_data(start_date, from_place, to_place, city_name):
     action2.send_keys(Keys.ENTER)
     action2.perform()
     time.sleep(2)
-
     results = driver.find_elements_by_class_name('LJTSM3-v-d')
     for i in range(0, len(results), 1):
         if city_name in str(unidecode(results[i].text)):
             target = results[i]
-
     if target:
         bars = target.find_elements_by_class_name('LJTSM3-w-x')
         data = []
@@ -48,7 +45,6 @@ def scrape_data(start_date, from_place, to_place, city_name):
                         target.find_element_by_class_name('LJTSM3-w-k').find_elements_by_tag_name('div')[1].text))
     else:
         raise Exception("No relevant results found. Sorry...")
-
     clean_data = []
     for d in data:
         try:
@@ -57,9 +53,9 @@ def scrape_data(start_date, from_place, to_place, city_name):
                                float(d[0].replace('$', '').replace(',', ''))])
         except:
             continue
-
     df = pd.DataFrame(clean_data, columns=['Day_of_Flight', 'Days_to_date', 'Price'])
     return df
+
 
 def scrape_data_90(start_date, from_place, to_place, city_name):
     date = str(start_date).split(" ")[0]
@@ -72,7 +68,6 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
     action1.send_keys(Keys.ENTER)
     action1.perform()
     time.sleep(0.05)
-
     to_input = driver.find_element_by_xpath('//*[@id="root"]/div[3]/div[3]/div/div[4]/div/div')
     to_input.click()
     action2 = ActionChains(driver)
@@ -86,7 +81,6 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
         if city_name in str(unidecode(results[i].text)):
             target = results[i]
             index_to_stretch = i + 1
-
     if target:
         bars = target.find_elements_by_class_name('LJTSM3-w-x')
         data1 = []
@@ -97,19 +91,16 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
                         target.find_element_by_class_name('LJTSM3-w-k').find_elements_by_tag_name('div')[1].text))
     else:
         raise Exception("No relevant results found. Sorry...")
-
     ActionChains(driver).move_to_element(bars[0]).perform()
     time.sleep(0.5)
     stretch_bar = driver.find_element_by_xpath('//*[@id="root"]/div[3]/div[4]/div/div[2]/div[' + str(index_to_stretch)
                                                + ']/div/div[2]/div[2]/div/div[2]/div[5]/div')
     stretch_bar.click()
-
     time.sleep(2)
     results = driver.find_elements_by_class_name('LJTSM3-v-d')
     for i in range(0, len(results), 1):
         if city_name in str(unidecode(results[i].text)):
             target = results[i]
-
     bars = target.find_elements_by_class_name('LJTSM3-w-x')
     data2 = []
     for bar in bars:
@@ -127,9 +118,9 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
                                float(d[0].replace('$', '').replace(',', ''))])
         except:
             continue
-
     df = pd.DataFrame(clean_data, columns=['Day_of_Flight', 'Days_to_date', 'Price'])
     return df
+
 
 def task_3_dbscan(d_frame):
     prices = [x for x in d_frame['Price']]
@@ -151,9 +142,11 @@ def task_3_dbscan(d_frame):
                 markeredgecolor='k', markersize=14)
 
     plt.title("Total Cluster 60 days: {}".format(clusters), fontsize=14, y=1.01)
-    plt.savefig('plot.png')
+    plt.savefig('task_3_dbscan.png')
     d_frame['Labels'] = db.labels_
-    return d_frame
+    mns_per_cluster = d_frame.groupby('Labels')['Price'].mean()
+    # return d_frame[['Day_of_Flight', 'Prices']]
+
 
 def task_3_dbscan90(d_frame):
     prices = [x for x in d_frame['Price']]
@@ -175,9 +168,25 @@ def task_3_dbscan90(d_frame):
                 markeredgecolor='k', markersize=14)
 
     plt.title("Total Cluster 90 days: {}".format(clusters), fontsize=14, y=1.01)
-    plt.savefig('plot90.png')
+    plt.savefig('task_3_dbscan90.png')
     d_frame['Labels'] = db.labels_
-    return d_frame
+    # return d_frame[['Day_of_Flight', 'Prices']]
+
+
+def task_3_IQR(df_frame):
+    sorted_frame = df_frame.sort_values(by='Price').reset_index()
+    outlier_idx = []
+    q1 = sorted_frame['Price'][:(len(sorted_frame)//2)].median()
+    q3 = sorted_frame['Price'][(len(sorted_frame)//2):].median()
+    iqr = q3 - q1
+    for index, value in enumerate(sorted_frame['Price']):
+        if value < (q1 - 1.5 * iqr) or value > (q3 + 1.5 * iqr):
+            outlier_idx.append((index, value))
+
+    plt.title("Outliers of Flight Prices using IQR and Matplotlib", fontsize=14, y=1.01)
+    plt.plot(outlier_idx, value, 'ro', markersize=7, label='outliers')
+    plt.legend()
+
 
 flight_df = scrape_data(datetime.datetime(2017, 4, 1), 'NYC', 'France', 'Toulouse')
 plot_df = task_3_dbscan(flight_df)
@@ -185,4 +194,5 @@ plot_df = task_3_dbscan(flight_df)
 flight90_df = scrape_data_90(datetime.datetime(2017, 4, 1), 'NYC', 'France', 'Toulouse')
 plot90_df = task_3_dbscan90(flight90_df)
 
+# PyCharm breakpoint
 2+2
