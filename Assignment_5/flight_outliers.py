@@ -52,11 +52,10 @@ def scrape_data(start_date, from_place, to_place, city_name):
     clean_data = []
     for d in data:
         try:
-            clean_data.append(
-                [(parse(d[1].split('-')[0].strip()) - date).days, float(d[0].replace('$', '').replace(',', ''))])
+            clean_data.append([(parse(d[1].split('-')[0].strip()) - date).days, float(d[0].replace('$', '').replace(',', ''))])
         except:
             continue
-    df = pd.DataFrame(clean_data, columns=['Day_of_Flight', 'Price'])
+    df = pd.DataFrame(clean_data, columns=['Day', 'Price'])
     return df
 
 
@@ -119,7 +118,7 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
     for d in data:
         try:
             clean_data.append(
-                [(parse(d[1].split('-')[0].strip()) - day).days, float(d[0].replace('$', '').replace(',', ''))])
+                [(parse(d[1].split('-')[0].strip()) - date).days, float(d[0].replace('$', '').replace(',', ''))])
         except:
             continue
     df = pd.DataFrame(clean_data, columns=['Day_of_Flight', 'Price'])
@@ -128,7 +127,8 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
 
 def task_3_dbscan(d_frame):
     X = StandardScaler().fit_transform(d_frame)
-    db = DBSCAN(eps=.45, min_samples=3).fit(X)
+    db = DBSCAN(eps=.35, min_samples=3).fit(X)
+    # I found this to be the most suitable pair of parameters for dbscan
 
     labels = db.labels_
     clusters = len(set(labels))
@@ -143,53 +143,34 @@ def task_3_dbscan(d_frame):
                 markeredgecolor='k', markersize=14)
 
     plt.title("Total Cluster: {}".format(clusters), fontsize=14, y=1.01)
+    plt.savefig('task_3_dbscan.png')
     d_frame['Labels'] = db.labels_
 
-    def calculate_cluster_means(X, labels, quiet=False):
-        lbls = np.unique(labels)
+    lbls = np.unique(labels)
+    cluster_means = [np.mean(X[labels == num, :], axis=0) for num in lbls if num != -1]
 
-        cluster_means = [np.mean(X[labels == num, :], axis=0) for num in lbls if num != -1]
+    # identifying outliers and their nearest clusters Euclidean-wise
+    cluster_combo = zip(lbls[1:], cluster_means)
+    outliers = [x for x in X[db.labels_ == -1]]
+    outlier_lst = []
+    for x in outliers:
+        min_dist = min([(euclidean(x, cm), cm) for cm in cluster_means])
+        for i in range(0, len(cluster_combo), 1):
+            if np.array_equal(min_dist[1],cluster_combo[i][1]):
+                x_cluster = cluster_combo[i][0]
+                d_frame['Nearest_cluster'] = x_cluster
+            outlier_lst.append((x, x_cluster))
 
-        if not quiet:
-            print "Cluster labels: {}".format(np.unique(lbls))
-            print "Cluster Means: {}".format(cluster_means)
+    # populating the main clusters as lists of arrays belonging to each label so we can get the sd of each cluster
+    '''agg_of_clusters = []
+    for n in [num for num in range(lbls[-1] + 1)]:
+        locals()['cluster_{0}'.format(n)] = [x for x in X[db.labels_ == n]]
+        agg_of_clusters.append(locals()['cluster_{0}'.format(n)])'''
 
-        return cluster_means
-
-    def print_distance(point_of_interest, cluster_means):
-        dist = [euclidean(point_of_interest, cm) for cm in cluster_means]
-        print "Euclidean distance: {}".format(dist)
-
-    def plot_the_clusters(X, dbscan_model, point_of_interest=None, set_size=True,
-                          markersize=14):
-        labels = dbscan_model.labels_
-        clusters = len(set(labels))
-        unique_labels = set(labels)
-        colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
-
-        if set_size:
-            plt.subplots(figsize=(12, 8))
-
-        for k, c in zip(unique_labels, colors):
-            class_member_mask = (labels == k)
-            xy = X[class_member_mask]
-            plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=c,
-                     markeredgecolor='k', markersize=markersize)
-
-        if point_of_interest is not None:
-            plt.plot(point_of_interest[0], point_of_interest[1], 'xr', markersize=markersize + 3)
-
-        plt.title("Total Clusters: {}".format(clusters), fontsize=14, y=1.01)
-
-        return colors, unique_labels
-
-    def new_dbscan(X, dbscan_model, point_of_interest):
-        cluster_means = calculate_cluster_means(X, dbscan_model.labels_)
-        print_distance(point_of_interest, cluster_means)
-        return plot_the_clusters(X, dbscan_model, point_of_interest)
-
-    plt.savefig('task_3_dbscan.png')
-
+    '''for outlier in outlier_lst:
+        if outlier[0][1] < np.mean([x[1] for x in agg_of_clusters[int(outlier[1])]]) \
+                - (2 * np.std([x[1] for x in agg_of_clusters[int(outlier[1])]])):
+            pass'''
 
 def task_3_IQR(df_frame):
     sorted_frame = df_frame.sort_values(by='Price').reset_index()
@@ -207,11 +188,11 @@ def task_3_IQR(df_frame):
     df_frame['Price'].plot.box()
     plt.savefig('task_3_iqr.png')
 
-flight_df = scrape_data(datetime.datetime(2017, 4, 10), 'NYC', 'France', 'Toulouse')
+flight_df = scrape_data(datetime.datetime(2017, 4, 17), 'Atlanta', 'France', 'Paris')
 plot_df = task_3_dbscan(flight_df)
 
-flight90_df = scrape_data_90(datetime.datetime(2017, 4, 10), 'NYC', 'France', 'Toulouse')
-plot90_df = task_3_dbscan(flight90_df)
+# flight90_df = scrape_data_90(datetime.datetime(2017, 4, 15), 'Atlanta', 'France', 'Nice')
+# plot90_df = task_3_dbscan(flight90_df)
 
 # PyCharm breakpoint
 2+2
