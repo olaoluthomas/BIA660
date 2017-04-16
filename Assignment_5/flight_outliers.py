@@ -169,29 +169,22 @@ def task_3_dbscan(d_frame):
 
     lbls = np.unique(labels)
     cluster_means = [np.mean(X[labels == num, :], axis=0) for num in lbls if num != -1]
-
-    # identifying outliers and their nearest clusters Euclidean-wise
-    cluster_combo = zip(lbls[1:], cluster_means)
+    cluster_sds = [X[labels == num, :1].std() for num in lbls if num != -1]
     outliers = [x for x in X[db.labels_ == -1]]
-    outlier_lst = []
+    nearest_cluster = []
     for x in outliers:
         min_dist = min([(euclidean(x, cm), cm) for cm in cluster_means])
-        for i in range(0, len(cluster_combo), 1):
-            if np.array_equal(min_dist[1],cluster_combo[i][1]):
-                x_cluster = cluster_combo[i][0]
-                d_frame['Nearest_cluster'] = x_cluster
-            outlier_lst.append((x, x_cluster))
-
-    # populating the main clusters as lists of arrays belonging to each label so we can get the sd of each cluster
-    # agg_of_clusters = []
-    # for n in [num for num in range(lbls[-1] + 1)]:
-        # locals()['cluster_{0}'.format(n)] = [x for x in X[db.labels_ == n]]
-        # agg_of_clusters.append(locals()['cluster_{0}'.format(n)])
-
-    for outlier in outlier_lst:
-        if outlier[0][1] < np.mean([x[1] for x in X[db.labels_ == outlier[1]]]) \
-                - (2 * np.std([x[1] for x in X[db.labels_ == outlier[1]]])):
-            pass
+        for i in range(0, len(cluster_means), 1):
+            if np.array_equal(min_dist[1], cluster_means[i]):
+                nearest_cluster.append(i)
+    gd_outliers = []
+    for i in range(0, len(outliers), 1):
+        if outliers[i][1] < (cluster_means[nearest_cluster[i]][1] - 2*cluster_sds[nearest_cluster[i]]):
+            gd_outliers.append(outliers[i])
+    if len(gd_outliers) > 0:
+        return gd_outliers
+    else:
+        print "There are no points that satisfy the set conditions."
 
 def task_3_IQR(df_frame):
     sorted_frame = df_frame.sort_values(by='Price').reset_index()
@@ -210,7 +203,7 @@ def task_3_IQR(df_frame):
     plt.savefig('task_3_iqr.png')
 
 flight_df = scrape_data(datetime.datetime(2017, 4, 17), 'Atlanta', 'France', 'Paris')
-plot_df = task_3_dbscan(flight_df)
+outs_df = task_3_dbscan(flight_df)
 
 # flight90_df = scrape_data_90(datetime.datetime(2017, 4, 15), 'Atlanta', 'France', 'Nice')
 # plot90_df = task_3_dbscan(flight90_df)
