@@ -48,7 +48,7 @@ def scrape_data(start_date, from_place, to_place, city_name):
 
     # if the script breaks at this point, increase the amount of sleep time above to allow the element to stabilize
     results = driver.find_elements_by_class_name('LJTSM3-v-d')
-    for i in range(0, len(results), 1):
+    for i in range(len(results)):
         if city_name in str(unidecode(results[i].text)):
             target = results[i]
     if target:
@@ -102,7 +102,7 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
 
     # if the script breaks at this point, increase the amount of sleep time above to allow the element to stabilize
     results = driver.find_elements_by_class_name('LJTSM3-v-d')
-    for i in range(0, len(results), 1):
+    for i in range(len(results)):
         if city_name in str(unidecode(results[i].text)):
             target = results[i]
             index_to_stretch = i + 1
@@ -123,7 +123,7 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
     stretch_bar.click()
     time.sleep(2)
     results = driver.find_elements_by_class_name('LJTSM3-v-d')
-    for i in range(0, len(results), 1):
+    for i in range(len(results)):
         if city_name in str(unidecode(results[i].text)):
             target = results[i]
     bars = target.find_elements_by_class_name('LJTSM3-w-x')
@@ -147,7 +147,8 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
 
 
 def task_3_dbscan(d_frame):
-    X = StandardScaler().fit_transform(d_frame)
+    scaler = StandardScaler()
+    X = scaler.fit_transform(d_frame)
     db = DBSCAN(eps=.35, min_samples=3).fit(X)
     # I found this to be the most suitable pair of parameters for dbscan
 
@@ -174,15 +175,21 @@ def task_3_dbscan(d_frame):
     nearest_cluster = []
     for x in outliers:
         min_dist = min([(euclidean(x, cm), cm) for cm in cluster_means])
-        for i in range(0, len(cluster_means), 1):
+        for i in range(len(cluster_means)):
             if np.array_equal(min_dist[1], cluster_means[i]):
                 nearest_cluster.append(i)
+
     gd_outliers = []
-    for i in range(0, len(outliers), 1):
-        if outliers[i][1] < (cluster_means[nearest_cluster[i]][1] - 2*cluster_sds[nearest_cluster[i]]):
-            gd_outliers.append(outliers[i])
+    for i in range(len(outliers)):
+        if scaler.inverse_transform(cluster_means[nearest_cluster[i]]- 2*cluster_sds[nearest_cluster[i]])[1] > 50:
+            if scaler.inverse_transform(cluster_means[nearest_cluster[i]])[1] - scaler.inverse_transform(outliers[i])[1] >= 50:
+                gd_outliers.append(outliers[i])
+        else:
+            if cluster_means[nearest_cluster[i]][1] - 2 * cluster_sds[nearest_cluster[i]] > outliers[i][1]:
+                gd_outliers.append(outliers[i])
     if len(gd_outliers) > 0:
-        return gd_outliers
+        df_new = scaler.inverse_transform(gd_outliers)
+        return df_new
     else:
         print "There are no points that satisfy the set conditions."
 
