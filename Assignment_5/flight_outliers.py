@@ -1,4 +1,3 @@
-import bs4
 import time
 import pandas as pd
 import datetime
@@ -75,7 +74,8 @@ def scrape_data(start_date, from_place, to_place, city_name):
 def scrape_data_90(start_date, from_place, to_place, city_name):
     date = str(start_date).split(" ")[0]
     driver = webdriver.Chrome()
-    driver.get('https://www.google.com/flights/explore/#explore;li=3;lx=5;d=' + date)
+    url = 'https://www.google.com/flights/explore/#explore;li=3;lx=5;d=' + date
+    driver.get(url)
     from_input = driver.find_element_by_xpath('//*[@id="root"]/div[3]/div[3]/div/div[2]/div')
     from_input.click()
     action1 = ActionChains(driver)
@@ -142,7 +142,7 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
                 [(parse(d[1].split('-')[0].strip()) - start_date).days, float(d[0].replace('$', '').replace(',', ''))])
         except:
             continue
-    df = pd.DataFrame(clean_data, columns=['Day_of_Flight', 'Price'])
+    df = pd.DataFrame(clean_data, columns=['Day', 'Price'])
     return df
 
 
@@ -172,23 +172,24 @@ def task_3_dbscan(d_frame):
     cluster_means = [np.mean(X[labels == num, :], axis=0) for num in lbls if num != -1]
     cluster_sds = [X[labels == num, :1].std() for num in lbls if num != -1]
     outliers = [x for x in X[db.labels_ == -1]]
-    nearest_cluster = []
+    nrst_cluster = []
     for x in outliers:
         min_dist = min([(euclidean(x, cm), cm) for cm in cluster_means])
         for i in range(len(cluster_means)):
             if np.array_equal(min_dist[1], cluster_means[i]):
-                nearest_cluster.append(i)
+                nrst_cluster.append(i)
 
     gd_outliers = []
     for i in range(len(outliers)):
-        if scaler.inverse_transform(cluster_means[nearest_cluster[i]]- 2*cluster_sds[nearest_cluster[i]])[1] > 50:
-            if scaler.inverse_transform(cluster_means[nearest_cluster[i]])[1] - scaler.inverse_transform(outliers[i])[1] >= 50:
+        if scaler.inverse_transform(cluster_means[nrst_cluster[i]]- 2 * cluster_sds[nrst_cluster[i]])[1] > 50:
+            if scaler.inverse_transform(cluster_means[nrst_cluster[i]])[1] - scaler.inverse_transform(outliers[i])[1] >= 50:
                 gd_outliers.append(outliers[i])
         else:
-            if cluster_means[nearest_cluster[i]][1] - 2 * cluster_sds[nearest_cluster[i]] > outliers[i][1]:
+            if cluster_means[nrst_cluster[i]][1] - 2 * cluster_sds[nrst_cluster[i]] > outliers[i][1]:
                 gd_outliers.append(outliers[i])
     if len(gd_outliers) > 0:
-        df_new = scaler.inverse_transform(gd_outliers)
+        gd_flights = scaler.inverse_transform(gd_outliers)
+        df_new = pd.DataFrame(gd_flights, columns= ['Day', 'Price'])
         return df_new
     else:
         print "There are no points that satisfy the set conditions."
@@ -209,11 +210,15 @@ def task_3_IQR(df_frame):
     df_frame['Price'].plot.box()
     plt.savefig('task_3_iqr.png')
 
-flight_df = scrape_data(datetime.datetime(2017, 4, 17), 'Atlanta', 'France', 'Paris')
-outs_df = task_3_dbscan(flight_df)
+# def task_4_dbscan(d_frame):
 
-# flight90_df = scrape_data_90(datetime.datetime(2017, 4, 15), 'Atlanta', 'France', 'Nice')
-# plot90_df = task_3_dbscan(flight90_df)
+
+
+# flight_df = scrape_data(datetime.datetime(2017, 4, 17), 'Atlanta', 'France', 'Paris')
+# outs_df = task_3_dbscan(flight_df)
+
+flight90_df = scrape_data_90(datetime.datetime(2017, 4, 18), 'Atlanta', 'Germany', 'Berlin')
+outs90_df = task_3_dbscan(flight90_df)
 
 # PyCharm breakpoint
 2+2
