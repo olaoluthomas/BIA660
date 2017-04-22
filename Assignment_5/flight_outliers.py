@@ -9,7 +9,7 @@ from selenium.webdriver.common.keys import Keys
 from urlparse import urlparse, urlunparse
 import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import numpy as np
 from scipy.spatial.distance import euclidean
 plt.style.use('ggplot')
@@ -149,9 +149,7 @@ def scrape_data_90(start_date, from_place, to_place, city_name):
 def task_3_dbscan(d_frame):
     scaler = StandardScaler()
     X = scaler.fit_transform(d_frame)
-    db = DBSCAN(eps=.35, min_samples=3).fit(X)
-    # I found this to be the most suitable pair of parameters for dbscan
-
+    db = DBSCAN(eps=0.27, min_samples=3).fit(X)
     labels = db.labels_
     clusters = len(set(labels))
     unique_labels = set(labels)
@@ -162,7 +160,7 @@ def task_3_dbscan(d_frame):
         class_member_mask = (labels == k)
         xy = X[class_member_mask]
         plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=c,
-                markeredgecolor='k', markersize=14)
+                markeredgecolor='k', markersize=10)
 
     plt.title("Total Cluster: {}".format(clusters), fontsize=14, y=1.01)
     plt.savefig('task_3_dbscan.png')
@@ -172,27 +170,34 @@ def task_3_dbscan(d_frame):
     cluster_means = [np.mean(X[labels == num, :], axis=0) for num in lbls if num != -1]
     cluster_sds = [X[labels == num, :1].std() for num in lbls if num != -1]
     outliers = [x for x in X[db.labels_ == -1]]
-    nrst_cluster = []
+    nrst_clstr = []
     for x in outliers:
         min_dist = min([(euclidean(x, cm), cm) for cm in cluster_means])
         for i in range(len(cluster_means)):
             if np.array_equal(min_dist[1], cluster_means[i]):
-                nrst_cluster.append(i)
+                nrst_clstr.append(i)
 
     gd_outliers = []
+    def xform(arr):
+        flt_price = scaler.inverse_transform(arr)[1]
+        return flt_price
+
     for i in range(len(outliers)):
-        if scaler.inverse_transform(cluster_means[nrst_cluster[i]]- 2 * cluster_sds[nrst_cluster[i]])[1] > 50:
-            if scaler.inverse_transform(cluster_means[nrst_cluster[i]])[1] - scaler.inverse_transform(outliers[i])[1] >= 50:
+        if scaler.inverse_transform(cluster_means[nrst_clstr[i]] - 2 * cluster_sds[nrst_clstr[i]])[1] > 50:
+            spread = xform((cluster_means[nrst_clstr[i]] - 2 * cluster_sds[nrst_clstr[i]]))
+            mn_price = xform(cluster_means[nrst_clstr[i]])
+            outlier_price = xform(outliers[i])
+            if mn_price - outlier_price >= spread:
                 gd_outliers.append(outliers[i])
         else:
-            if cluster_means[nrst_cluster[i]][1] - 2 * cluster_sds[nrst_cluster[i]] > outliers[i][1]:
+            if cluster_means[nrst_clstr[i]][1] - 2 * cluster_sds[nrst_clstr[i]] > outliers[i][1]:
                 gd_outliers.append(outliers[i])
     if len(gd_outliers) > 0:
         gd_flights = scaler.inverse_transform(gd_outliers)
         df_new = pd.DataFrame(gd_flights, columns= ['Day', 'Price'])
         return df_new
     else:
-        print "There are no points that satisfy the set conditions."
+        print "No points satisfy the conditions set."
 
 def task_3_IQR(df_frame):
     sorted_frame = df_frame.sort_values(by='Price').reset_index()
@@ -210,15 +215,60 @@ def task_3_IQR(df_frame):
     df_frame['Price'].plot.box()
     plt.savefig('task_3_iqr.png')
 
-# def task_4_dbscan(d_frame):
+def task_4_dbscan(d_frame):
+    scaler = MinMaxScaler()
+    X = scaler.fit_transform(d_frame)
+    db = DBSCAN(eps=0.05, min_samples=3).fit(X)
+
+    labels = db.labels_
+    clusters = len(set(labels))
+    unique_labels = set(labels)
+    colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+
+    plt.subplots(figsize=(9, 6))
+    for k, c in zip(unique_labels, colors):
+        class_member_mask = (labels == k)
+        xy = X[class_member_mask]
+        plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=c,
+                 markeredgecolor='k', markersize=10)
+
+    plt.title("Total Cluster: {}".format(clusters), fontsize=14, y=1.01)
+    plt.savefig('task_3_dbscan.png')
+    d_frame['Labels'] = db.labels_
+
+    lbls = np.unique(labels)
+    cluster_means = [np.mean(X[labels == num, :], axis=0) for num in lbls if num != -1]
+
+    def xform(arr):
+        flt_price = scaler.inverse_transform(arr)[1]
+        return flt_price
+
+    total = []
+    lst_o_clusters = []
+    cluster_list = []
+    for i in range(len(cluster_means)):
+        cluster = X[labels == i]
+        if len(cluster) >= 5:
+            sorted_prices = sorted([xform(x) for x in cluster])[:5]
+        if max(sorted_prices) - min(sorted_prices) <= 20 & [abs(sorted_prices[k] - sorted_prices[k+1]) < 20 for k in \
+                                                            range(len(sorted_prices)-1)]:
+            lst_o_clusters.append(scaler.inverse_transform(cluster)[1])
+            cluster_list.append(cluster)
+    for clustr in lst_o_clusters:
+        total.append(sum(clustr))
+    y = total.index(min(total))
+    chpst = cluster[y]
+    if chpst:
+        return chpst
+    else:
+        print "No clusters satisfy the conditions set."
 
 
+flight_df = scrape_data(datetime.datetime(2017, 4, 18), 'Atlanta', 'Germany', 'Berlin')
+outs_df = task_3_dbscan(flight_df)
 
-# flight_df = scrape_data(datetime.datetime(2017, 4, 17), 'Atlanta', 'France', 'Paris')
-# outs_df = task_3_dbscan(flight_df)
-
-flight90_df = scrape_data_90(datetime.datetime(2017, 4, 18), 'Atlanta', 'Germany', 'Berlin')
-outs90_df = task_3_dbscan(flight90_df)
+# flight90_df = scrape_data_90(datetime.datetime(2017, 4, 18), 'Atlanta', 'Germany', 'Berlin')
+# outs90_df = task_3_dbscan(flight90_df)
 
 # PyCharm breakpoint
 2+2
