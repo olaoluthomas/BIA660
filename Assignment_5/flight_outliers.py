@@ -14,7 +14,6 @@ import numpy as np
 from scipy.spatial.distance import euclidean
 plt.style.use('ggplot')
 
-
 def scrape_data(start_date, from_place, to_place, city_name):
     date = str(start_date).split(' ')[0]
     driver = webdriver.Chrome()
@@ -26,7 +25,7 @@ def scrape_data(start_date, from_place, to_place, city_name):
     action1.send_keys(from_place)
     action1.send_keys(Keys.ENTER)
     action1.perform()
-    time.sleep(0.5)
+    time.sleep(0.05)
 
     to_input = driver.find_element_by_xpath('//*[@id="root"]/div[3]/div[3]/div/div[4]/div/div')
     to_input.click()
@@ -68,8 +67,8 @@ def scrape_data(start_date, from_place, to_place, city_name):
         except Exception as e:
             print "Something's broken..."
     df = pd.DataFrame(clean_data, columns=['Day', 'Price'])
+    df.to_csv('Munich.csv')
     return df
-
 
 def scrape_data_90(start_date, from_place, to_place, city_name):
     date = str(start_date).split(" ")[0]
@@ -218,7 +217,7 @@ def task_3_IQR(df_frame):
 def task_4_dbscan(d_frame):
     scaler = MinMaxScaler()
     X = scaler.fit_transform(d_frame)
-    db = DBSCAN(eps=0.05, min_samples=3).fit(X)
+    db = DBSCAN(eps=0.105, min_samples=5).fit(X)
 
     labels = db.labels_
     clusters = len(set(labels))
@@ -233,39 +232,43 @@ def task_4_dbscan(d_frame):
                  markeredgecolor='k', markersize=10)
 
     plt.title("Total Cluster: {}".format(clusters), fontsize=14, y=1.01)
-    plt.savefig('task_3_dbscan.png')
+    plt.savefig('task_4_dbscan.png')
     d_frame['Labels'] = db.labels_
 
     lbls = np.unique(labels)
     cluster_means = [np.mean(X[labels == num, :], axis=0) for num in lbls if num != -1]
 
     def xform(arr):
-        flt_price = scaler.inverse_transform(arr)[1]
-        return flt_price
+        day_price = scaler.inverse_transform(arr)
+        return day_price
 
     total = []
-    lst_o_clusters = []
     cluster_list = []
     for i in range(len(cluster_means)):
         cluster = X[labels == i]
         if len(cluster) >= 5:
-            sorted_prices = sorted([xform(x) for x in cluster])[:5]
-        if max(sorted_prices) - min(sorted_prices) <= 20 & [abs(sorted_prices[k] - sorted_prices[k+1]) < 20 for k in \
-                                                            range(len(sorted_prices)-1)]:
-            lst_o_clusters.append(scaler.inverse_transform(cluster)[1])
-            cluster_list.append(cluster)
-    for clustr in lst_o_clusters:
-        total.append(sum(clustr))
-    y = total.index(min(total))
-    chpst = cluster[y]
-    if chpst:
-        return chpst
+            sorted_prices = sorted([xform(x)[1] for x in cluster])[:5]
+        if (sorted_prices[4] - sorted_prices[0]) <= 20:
+            if [(abs(sorted_prices[l] - sorted_prices[l+1]) < 20) for l in range(4)]:
+                cluster_list.append(cluster)
+    if cluster_list:
+        if len(cluster_list) > 1:
+            for clustr in cluster_list:
+                total.append(sum(p[1] for p in xform(clustr)))
+            min_index = total.index(min(total))
+            chpst = cluster_list[min_index]
+        elif len(cluster_list) == 1:
+            chpst = cluster_list[0]
+        # I just realized the code below is wrong; it doesn't return the 5-day period with the lowest average price
+        sortd = sorted(xform(chpst))[:5]
+        return pd.DataFrame(sortd, columns=['Day', 'Price'])
     else:
-        print "No clusters satisfy the conditions set."
+        print "None of the clusters meet the conditions set."
 
-
-flight_df = scrape_data(datetime.datetime(2017, 4, 18), 'Atlanta', 'Germany', 'Berlin')
-outs_df = task_3_dbscan(flight_df)
+flight_df = scrape_data(datetime.datetime(2017, 4, 27), 'Atlanta', 'Germany', 'Munich')
+# flight_df = scrape_data(datetime.datetime(2017, 4, 27), 'NYC', 'West Indies', 'Bridgetown')
+# outs_df = task_3_dbscan(flight_df)
+# cheap_df = task_4_dbscan(flight_df)
 
 # flight90_df = scrape_data_90(datetime.datetime(2017, 4, 18), 'Atlanta', 'Germany', 'Berlin')
 # outs90_df = task_3_dbscan(flight90_df)
